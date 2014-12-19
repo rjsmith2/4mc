@@ -541,8 +541,8 @@ lineToTool.down=function(i){
 		setTimeout(function(){
 			sH(this[0]);
 			fillRectLineTo(this[1][0],this[1][1],this[2][0],this[2][1],plopBlockDown);
-			newExecuteTask("uS("+selectedBlock.colorID+");");
-			newExecuteTask("progressBar.value="+(layerID/globalHeight4Flouder)+";progressBar2.value="+((this[3]-i/this[3]))+";");
+			newExecuteTask("uS("+selectedBlock.colorID+");"+
+				"progressBar.value="+Math.min(1,(this[3]*1-this[0]/this[3]*1))+";");
 		}.bind([i,this.pointA,this.pointB,heightOptionLine.value]),40*i);
 		
 	}
