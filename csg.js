@@ -341,7 +341,7 @@ window.ThreeBSP = (function() {
 			
 			
 			if ( f.length >= 3 ) front[front.length]=( new ThreeBSP.Polygon( f ).calculateProperties() );
-			if ( b.length >= 3 ) backf[backf.length]=( new ThreeBSP.Polygon( b ).calculateProperties() );
+			if ( b.length >= 3 ) back[back.length]=( new ThreeBSP.Polygon( b ).calculateProperties() );
 		}
 	};
 	
