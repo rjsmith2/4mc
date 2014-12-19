@@ -1,0 +1,331 @@
+function applyVertexColors( g, c ){
+	var f=g.faces;
+	for(var i=f.length;--i>=0;){
+		for( var j = 3; --j>=0; ) {
+			f[i].vertexColors[ j ] = c;
+
+		}
+	}
+}
+
+			var container;
+			var camera, controls, scene, renderer;
+			pickingData = [];
+			var	pickingTexture, pickingScene;
+			var objects = [];
+			var highlightBox;
+			drawnObject=null;
+			var mouse = new THREE.Vector2();
+			var offset = new THREE.Vector3( 0.25, 0.25, 0.25);
+			container = mainBackgroundCanvasContainer;
+			camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 1, 5555 );
+			camera.position.z=256;
+			camera.position.y= -1256;
+			renderer = new THREE.WebGLRenderer( { antialias: true,alpha: true } );
+			renderer.setClearColor(0xdddddd,1);
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			renderer.sortObjects = false;
+			
+			controls = new THREE.TrackballControls( camera, container);
+			controls.rotateSpeed = 1.0;
+			controls.zoomSpeed = 5.2;
+			controls.panSpeed = 0.8;
+			controls.noZoom = false;
+			controls.noPan = false;
+			controls.staticMoving = true;
+			controls.dynamicDampingFactor = 0.3;
+
+			scene = new THREE.Scene();
+
+			pickingScene = new THREE.Scene();
+			pickingTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
+			pickingTexture.generateMipmaps = false;
+			
+
+			var light = new THREE.AmbientLight( 0xaaaaaa ); // soft white light scene.add( light );
+			scene.add( light );
+			flashlight = new THREE.SpotLight(0xffffff,1,1240);
+			scene.add(flashlight);
+			flashlight.position.copy(camera.position);
+			flashlight.target = camera;
+
+			geometry = new THREE.Geometry(),
+			pickingGeometry = new THREE.Geometry(),
+			pickingMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ),
+			defaultMaterial = new THREE.MeshLambertMaterial({ color: 0xffee99, shading: THREE.FlatShading, vertexColors: THREE.VertexColors, wireframe:false	} );
+			scale = new THREE.Vector3(1,1,1);
+			rotation = new THREE.Euler();
+			//geometry.dynamic =true;
+			
+
+			var geom = new THREE.BoxGeometry( 1, 1, 1 );
+			var color = new THREE.Color();
+			var matrix = new THREE.Matrix4();
+			var quaternion = new THREE.Quaternion();
+			quaternion.setFromEuler( rotation, false );
+			var scale,rotation;
+			mapSize=[4,4];
+			highlightBox = new THREE.Mesh(
+					new THREE.BoxGeometry( 1, 1, 1 ),
+					new THREE.MeshLambertMaterial( { color: 0xffff00 }
+				) );
+			scene.add( highlightBox );
+			container.appendChild( renderer.domElement );
+
+			
+
+				window.addEventListener( 'mousemove', onMouseMove,true);
+				renderer.domElement.addEventListener( 'mousedown', function(e){
+					mouse.downed=e.button==0;
+					mouse.x = e.clientX;
+					mouse.y = e.clientY;
+					pick(0,e);
+				},false);
+				renderer.domElement.addEventListener( 'mouseup', onMouseUp,false);
+				renderer.domElement.addEventListener( 'DOMMouseScroll',function(){setTimeout(render,50);},false);
+				window.addEventListener( 'mouseup', onMouseUp,false );
+				window.addEventListener("resize",function(){
+					//do me
+				},false);
+				
+			currentHeight=0;
+			var pos = THREE.Vector3;
+			renderer.isPreloaded=false;
+			function newWorld(x,y){
+				renderer.isPreloaded=false;
+				var childScene=scene.children;
+				childBlocks={};
+				for (var i = childScene.length ;i > 3; ) {
+					scene.remove(childScene[--i]);				
+				}
+				while(pickingScene.length)
+					pickingScene.remove(pickingScene[0]);
+				pickingScene=null;
+				pickingScene = new THREE.Scene();
+				
+				//This can be resizable.... but disabled for now
+				//pickingTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
+				//pickingTexture.generateMipmaps = false;
+				pickingGeometry = new THREE.Geometry()
+
+				geometry = new THREE.Geometry();
+				matrix = new THREE.Matrix4();
+				mapSize=[x,y];
+				geometryPlane = new THREE.Mesh(new THREE.PlaneBufferGeometry (1*mapSize[0]+1, 1*mapSize[1]+1), new THREE.MeshNormalMaterial());
+				geometryPlane.overdraw = false;
+				scene.add(geometryPlane);
+				
+				var size=mapSize[0]*mapSize[1];
+				
+				var pickingObject=new THREE.Mesh( pickingGeometry, pickingMaterial ) ;
+				pickingScene.add( pickingObject);
+				//gdsa=pickingData[Math.round(pickingData.length/2)-1];
+				//camera.position.set(gdsa["x"]+mapSize[0],gdsa["y"]+mapSize[1],gdsa["z"]+1110); 
+				pickingData=[];
+				//drawnObject = new THREE.Mesh( geometry, defaultMaterial );
+				//scene.add( drawnObject );
+				maxX=mapSize[0];
+				maxY=mapSize[1];
+				//render();
+				//nB(0,new THREE.Color(0xFF0000));
+				//updateSceneMesh();
+				
+			}
+			function sH(h){//set default height, 0 is default
+				currentHeight=h;
+			}
+			var colorArray=[];
+			function pLC4B(colorHex){
+				colorArray[colorArray.length]=new THREE.Color(colorHex);
+			}
+			var maxX=mapSize[0];
+			var maxY=mapSize[1];
+			var curColor="";
+			function nB(index,c){//must be index, not xy cord based  
+				//no longer needed. This function can be removed safely due to new optimizations
+				return;		
+				var x=((index )%maxX);
+				matrix.compose( new pos(x=((index )%maxX),((index-x)/maxY),currentHeight), quaternion, scale );				
+				applyVertexColors( geom,colorArray[c]);
+				geometry.merge( geom, matrix );
+				
+				return this;
+			}
+			function nBc(x,y,c){//must be index, not xy cord based  	
+				//try to use this for static blocks. Use post_nB for dynamic blocks (uses more resources);
+				matrix.compose( new pos(x,y,currentHeight), quaternion, scale );				
+				applyVertexColors( geom,colorArray[c]);
+				geometry.merge( geom, matrix );
+				return this;
+			}
+			function rBi(index){
+				scene.remove(scene.getObjectByName(index));
+			}
+				var cube = new THREE.Shape();
+				cube.moveTo(1.0,1.0);
+				cube.lineTo(0.0, 1);
+				cube.lineTo(0.0, 0.0);
+				cube.lineTo(1, 0.0);
+				cube.lineTo(1, 1);
+
+			function rBidc(x,y){
+				//matrix.decompose( new pos(x,y,currentHeight), quaternion, scale );		
+				var extrusionSettings = {
+					bevelEnabled:false,bevelSegments:0,steps:1,amount:1
+				};				
+				var deGeom = new THREE.ExtrudeGeometry( cube, extrusionSettings );
+				matrix.compose( new pos(x,y,currentHeight), quaternion, scale );
+				geometry.merge( deGeom, matrix );
+				//geometry.merge( deGeom, matrix );
+			}
+			function post_nB(x,y,c){
+				var index=x+(y*mapSize[0]);
+				var o=new THREE.Mesh(
+								new THREE.BoxGeometry( 1, 1, 1 ),
+								new THREE.MeshBasicMaterial( { color: (colorArray[c]?(curColor="#"+colorArray[c].getHexString()):curColor),vertexColors: THREE.FaceColors}) 
+							);
+				o.position.copy(new THREE.Vector3(x,y,currentHeight));		
+				o.name=index;
+				scene.add(o);				
+				//o.name=index;
+			}
+			function pBS(is,ie){//this should be the first layer only.
+				var x=0;
+				var maxX=mapSize[0];
+				var maxY=mapSize[1];
+				for(var i=ie-is+1;--i>0;){
+					var index=ie-i;
+					position = new pos(x=((index )%maxX),((index-x)/maxY),0);				
+					matrix.compose( position, quaternion, scale );
+					applyVertexColors( geom, color.setHex(index) );//limitation possible here?
+					pickingGeometry.merge( geom, matrix );
+					//applyVertexColors( geom, color.setHex( Math.random()*(0x00eeee)>>0 ) );
+					//geometry.merge( geom, matrix );
+
+					
+				}
+				//updateSceneMesh();
+			
+			}
+			function uS(){
+				drawnObject = new THREE.Mesh( geometry, defaultMaterial );
+				scene.add(drawnObject);
+				geometry = new THREE.Geometry();
+					
+			}
+			function updateSceneMesh(){
+				renderer.isPreloaded=true;
+				//nBc=post_nB;
+				drawnObject = new THREE.Mesh( geometry, defaultMaterial );	
+				scene.add(drawnObject);
+				//geometry.verticesNeedUpdate=true;
+				geometryPlane.position.copy(drawnObject.position).sub(new THREE.Vector3(1+~mapSize[0]/2,1+~mapSize[1]/2, 0));
+				render();
+				geometry = new THREE.Geometry();
+				
+			}
+			init();
+
+
+			function init() {	
+				//newWorld(4,4);	
+			}
+
+			//
+			function onMouseUp(e){
+				mouse.downed=false;				
+				render();
+			}
+			var pickableMoment=true;
+			function onMouseMove( e ) {
+				
+				mouse.x =  e.clientX;
+				mouse.y =  e.clientY;				
+				flashlight.position.copy(camera.position);
+				flashlight.position.z+=100;
+				if(mouse.downed &&pickableMoment){					
+					pickableMoment=false;
+					
+					pick(1,e);
+					setTimeout(function(){pickableMoment=true;},100);
+				
+				}
+				render();
+				
+
+			}
+			extraPickActionVidget=function(){}
+			var previousIndex=-1;
+			function pick(mid,e) {
+				var vector = new THREE.Vector3();
+				vector.set(
+					( e.clientX / window.innerWidth ) * 2 - 1,
+					- ( e.clientY / window.innerHeight ) * 2 + 1,
+					0.5 );
+
+				vector.unproject( camera );
+				var dir = vector.sub( camera.position ).normalize();
+				var distance = - camera.position.z / dir.z;
+				var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+				pos["x"]=Math.ceil(pos["x"]-0.5);
+				pos["y"]=Math.ceil(pos["y"]-0.5);
+				//var i=pos["x"]+(pos["y"]*1);
+				//console.log(pos);
+				/*
+				if(!renderer.isPreloaded)return;//must be finished first or selection will be mucky.
+				//render the picking scene off-screen
+				
+				renderer.render( pickingScene, camera, pickingTexture );
+
+				gl = self.renderer.getContext();
+
+				//read the pixel under the mouse from the texture
+
+				var pixelBuffer = new Uint8Array( 4 );
+				gl.readPixels( mouse.x, pickingTexture.height - mouse.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelBuffer );
+
+				//interpret the pixel as an ID
+			
+				var i = ( pixelBuffer[0] << 16 ) | ( pixelBuffer[1] << 8 ) | ( pixelBuffer[2] );
+				*/
+				var data = pos;//new THREE.Vector3(x,((i-x)/mapSize[1]),currentHeight);
+				highlightBox.position.copy( data );
+				var x=Math.ceil(highlightBox.position["x"])
+				var y=Math.ceil(highlightBox.position["y"]);
+				var z=1;//
+				var mapSize=maxX*maxY;
+				var i=(x)+(y*maxX);
+				
+				//console.log("id is "+i);
+				if(i==previousIndex)return;
+				previousIndex=i;
+				//console.log(i);
+				//send2VidgetGETTER(["pick",i,mid]);
+				
+				
+				//var x=((i )%mapSize[0]);
+				
+				
+				
+					
+					
+					send2VidgetGETTER(["pick",i,mid]);
+					//highlightBox.rotation.copy( rotation );
+					//highlightBox.scale.copy( scale ).add( offset );
+					//highlightBox.visible = true;
+
+				return true;
+
+			}
+
+			function render() {
+				controls.update();
+				renderer.render( scene, camera );
+
+			}
+
+			function send2VidgetGETTER(s){
+				send2VidgetGETTER=mainSecondaryThree.windows[1].sendBack2Vidget;
+				return send2VidgetGETTER(s);
+			}
