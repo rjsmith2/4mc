@@ -44,7 +44,7 @@ function applyVertexColors( g, c ){
 			
 
 			var light = new THREE.AmbientLight( 0xaaaaaa ); // soft white light scene.add( light );
-			scene.add( light );
+			//scene.add( light );
 			flashlight = new THREE.PointLight(0xaaaaaa,1,0);
 			scene.add(flashlight);
 			flashlight.position.copy(camera.position);
@@ -97,7 +97,8 @@ function applyVertexColors( g, c ){
 				e.stopPropagation();
 				e.preventDefault();
 				var files = e.target.files || e.dataTransfer.files;
-				SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["loadSchFile",files[0]]]);
+				send2SecondaryBasedOnID(0,["loadSchFile",files[0]]);
+				//SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["loadSchFile",files[0]]]);
 				//var file=files[0];
 				//var reader=new FileReader();
 				//reader.onload=function(e){
@@ -115,8 +116,8 @@ function applyVertexColors( g, c ){
 			currentHeight=0;
 			var pos = THREE.Vector3;
 			renderer.isPreloaded=false;
+			var geometryPlane=null;
 			function newWorld(x,y){
-				
 	
 				renderer.isPreloaded=false;
 				var childScene=scene.children;
@@ -160,27 +161,25 @@ function applyVertexColors( g, c ){
 			}
 			function sH(h){//set default height, 0 is default
 				currentHeight=h;
+				return sendToAll(["sH",[h]]);//need to be sent to all!
+				
+				return SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["sH",[h]]]);
+				
 			}
 			var colorArray=[];
 			function pLC4B(i,colorHex){
+				//send2SecondaryBasedOnID(i,["pLC4B",[i,colorHex]]);
+				//SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["pLC4B",[i,colorHex]]]);
 				newMeshSystem(i,colorHex);
 				colorArray[i]=new THREE.Color(colorHex);
 			}
 			var maxX=mapSize[0];
 			var maxY=mapSize[1];
 			var curColor="";
-			function nB(index,c){//must be index, not xy cord based  
-				//no longer needed. This function can be removed safely due to new optimizations
-				return;		
-				var x=((index )%maxX);
-				matrix.compose( new pos(x=((index )%maxX),((index-x)/maxY),currentHeight), quaternion, scale );				
-				applyVertexColors( geom,colorArray[c]);
-				geometry.merge( geom, matrix );
-				
-				return this;
-			}
 			var meshTest= new THREE.Mesh(geom);
 			function nBc(x,y,i){
+				return send2SecondaryBasedOnID(i,["nBC",[x,y,i]]);
+				return SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["nBC",[x,y,i]]]);
 				meshTest.position.set(x,y,currentHeight);				
 				blockMeshSystem[i][0] = blockMeshSystem[i][0].union(new ThreeBSP(meshTest));//starting here
 
@@ -263,12 +262,23 @@ function applyVertexColors( g, c ){
 				//updateSceneMesh();
 			
 			}
+			function uSP(i,threebsp){
+				threebsp.tree.allPolygons=ThreeBSP.Node.prototype.allPolygons.bind(threebsp.tree);
+				threebsp.toGeometry=ThreeBSP.prototype.toGeometry.bind(threebsp);				
+				scene.remove( blockMeshSystem[i][1] );
+				blockMeshSystem[i][1] =ThreeBSP.prototype.toMesh.apply(threebsp,new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:colorArray[i]}))
+				//blockMeshSystem[i][1] = threebsp.toMesh(new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorArray[i]}) );
+				blockMeshSystem[i][1].geometry.computeVertexNormals();				
+				scene.add(blockMeshSystem[i][1]);	
+			}
 			function uS(i){
 				//drawnObject = new THREE.Mesh( geometry, defaultMaterial );
 				//scene.add(drawnObject);
 				//geometry = new THREE.Geometry();
+				return send2SecondaryBasedOnID(i,["uS",[i]]);
+				//return SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["uS",[i]]]);
 				scene.remove( blockMeshSystem[i][1] );
-				blockMeshSystem[i][1] = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:colorArray[i]}));
+				blockMeshSystem[i][1] = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorArray[i]}));
 				blockMeshSystem[i][1].geometry.computeVertexNormals();				
 				scene.add(blockMeshSystem[i][1]);	
 			}
@@ -288,8 +298,7 @@ function applyVertexColors( g, c ){
 			blockMeshSystem=[];
 			var cube_geometryMesh = new THREE.BoxGeometry( 0.1, 0.1, 2 );
 			function newMeshSystem(i,colorHex){//for each unique type of block
-				//var start_time = (new Date()).getTime();
-				
+				//var start_time = (new Date()).getTime();				
 				var material = new THREE.MeshBasicMaterial();
 				var cube_mesh = new THREE.Mesh( cube_geometryMesh,material );
 				blockMeshSystem[i] = [new ThreeBSP( cube_mesh )];
@@ -297,14 +306,15 @@ function applyVertexColors( g, c ){
 				var cubeThreeBspSecond = new ThreeBSP( secondaryMesh );
 				blockMeshSystem[i][0] = blockMeshSystem[i][0].subtract( cubeThreeBspSecond );
 				
-				resultMesY = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial());
-				
+				var resultMesY = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial());
+				blockMeshSystem[i][1]=resultMesY;
 				resultMesY.geometry.computeVertexNormals();
 				//resultMesY.position.copy(drawnObject.position).add(new THREE.Vector3(mapSize[0]/2,mapSize[1]/2, 0));
 				//position4Mesh=new THREE.Vector3().copy(resultMesY.position);
 				scene.add( resultMesY );
 				//console.log( 'bench: ' + ((new Date()).getTime() - start_time) + 'ms' );
-				blockMeshSystem[i][1]=resultMesY;
+				send2SecondaryBasedOnID(i,["newMeshSystem",[i,colorHex]]);
+				//SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["newMeshSystem",[i,colorHex]]]);
 				return blockMeshSystem[i];
 			}
 	
@@ -419,4 +429,15 @@ function applyVertexColors( g, c ){
 			function send2VidgetGETTER(s,t){
 				send2VidgetGETTER=mainSecondaryThree.windows[1].sendBack2Vidget;
 				return send2VidgetGETTER(s,t);
+			}
+			
+			function send2SecondaryBasedOnID(i,data){
+				//~~(i/16)%16
+				SecondaryOffThread[i%16].thread.postMessage([1599,SecondaryOffThread[i%16].pID,0,data]);
+			}
+			function sendToAll(data){
+				for(var si=SecondaryOffThread.length;--si>=0;){
+					SecondaryOffThread[si].thread.postMessage([1599,SecondaryOffThread[si].pID,0,data]);
+				}
+				
 			}

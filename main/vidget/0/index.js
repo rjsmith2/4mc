@@ -235,7 +235,7 @@ var newExecuteTask=function(str){
 	return 1;
 }
 setInterval(sendExecute,500);//send some while idling (like user switched tabs)
-var executeBulkAmount=5;
+var executeBulkAmount=25;
 var sendExecute=function(){
 	//newWindow.postMessage([1084,"25423"]);
 	
@@ -315,6 +315,8 @@ var loadSchema=function(data){
 	console.log("world size is "+[data.Width,data.Length]);
 	console.log("total blocks: "+[data.Blocks.length]);
 	console.log("total layers: "+[data.Height]);
+	newExecuteTask("sendToAll(['totalBlockInfo',["+data.Blocks.length+"]]);");
+	newExecuteTask("sendToAll(['mapSize',["+[data.Width,data.Length].join(",")+"]]);");
 	
 	/*
 	for(var i=0;i<=data.Blocks.length;i++){

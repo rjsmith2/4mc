@@ -116,6 +116,32 @@ threads.createNewThread=function() {
 						window.framerAsync();
 					}
 				
+				} else if (vidget.vidgetRunning[id].flagSettings.type=="fieldset"){
+				     var windowID=data[2][0];
+				    var funcCallBack=function(msg,t){app.thread.postMessage([1599, this[0],this[1],msg]),t}.bind([id,windowID]);
+					vidget.vidgetRunning[id].windows[data[2][0]+1] = windows.create("",data[2][2],funcCallBack,[id,data[2][0]+1]);
+					vidget.vidgetRunning[id].windows[data[2][0]+1].windowTitleContainer.style.display="none";
+					var app=vidget.vidgetRunning[id];
+					app.documentElementCreatedArray[data[2][0]+1]=[];//new array element per window
+					windowID=data[2][0]+1;
+					var window = vidget.vidgetRunning[id].windows[windowID];
+						window.postMessageCallBack=this.postMessage;
+					window.className="";
+					window.onfocusAction=function(){};
+					fieldset.appendChild(window);
+					window.appWindowID=windowID;
+					window.appIDCallBack=id;
+					window.onresize=function(){};
+					window._offsetHeight=window.offsetHeight;
+					window.resizeItself();
+					if(data[2][2]&&data[2][2].framerAsync){
+						window.framerAsync=function(){
+							this.sendBack2Vidget([12]);
+							requestAnimationFrame(this.framerAsync.bind(this));
+						}
+						window.framerAsync();
+					}
+				
 				}else if(vidget.vidgetRunning[id].flagSettings.appendTo){
 					var windowID=data[2][0];
 				   var funcCallBack=function(msg,t){app.thread.postMessage([1599, this[0],this[1],msg]),t}.bind([id,windowID]);
@@ -670,12 +696,15 @@ threads.createNewThread=function() {
             applicationds.run(3, null, dataFromApp[1][0]);
         break;
 		case 1084://nonstandard API code
-			Function(data[2])();
+			return Function(data[2])();
         break;
 		case 10252://nonstandard API code, from secondary off-UI thread to primary off-UI thread
-			console.log("trying");
 			send2VidgetGETTER(["loadSchema",data[2]]);
 		break;
+		case 10152://nonstandard API code, from secondary off-UI thread to primary off-UI thread. 
+			uSP(data[2][0],data[2][1]);
+		break;
+		
                
         //case :
         //    
@@ -699,7 +728,8 @@ threads.createNewThread=function() {
 vidget.vidgetRunning={};
 var threadId=-1;
 vidget.run=function(appID,threadHandlerID/*optional*/,stringScript/*optional*/,vidgetInfo,flagSettings){
-threads.createNewThread();
+	//if(threads.threadHandlers.length<16)
+	threads.createNewThread();
     var app={};
 	app.flagSettings=(flagSettings||{});
     app.document=document.createDocumentFragment();
@@ -710,9 +740,9 @@ threads.createNewThread();
     app.appID=appID;
     app.running=false;
     app.styleDocument=null;
-	app.thread=threads.threadHandlers[++threadId];
+	app.thread=threads.threadHandlers[threadHandlerID%16];
 	app.thread.windows=app.windows;
-	app.pID=appID+"|"+(Math.random()*Date.now());
+	app.pID=appID+"|"+(Math.random()*(Date.now()));
     this.vidgetRunning[app.pID]=app;
 	var xhr = new XMLHttpRequest();
 	xhr.app=app;
@@ -735,11 +765,9 @@ threads.createNewThread();
 	}.bind([xhr,app]);
 
 	xhr.open("GET", "main/vidget/"+appID+"/index.js", true);
-	xhr.timeout = 4000;
-	xhr.ontimeout = function () { alert("Vidget app server is timing out. Try again later."); }
 	xhr.send(null);
 	
-    app.mainThread=threads.threadHandlers[threadHandlerID?parseInt(threadHandlerID):0%threads.threadHandlers.length];
+    app.mainThread=threads.threadHandlers[threadHandlerID%16];
     app.mainThread.postMessage([1,appID,stringScript]);
    
     return app;

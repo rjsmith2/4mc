@@ -5,6 +5,7 @@ var socketer=function(){};
 socketer.consoleSocket=null;
 doFunction={};
 mainBackgroundCanvasContainer=document.createElement("div");
+SecondaryOffThread=[];
 mainBackgroundCanvasContainer.className="mainBackgroundCanvas";
 socketer.socket=function(){
 	return;//not supported in mc4 (no nodejs support!)
@@ -244,13 +245,23 @@ startup.activate=function(){
 		},200);
 				progressBar=document.createElement("progress");
 				progressBar.value=1;
+				progressBar.className="progressBar";
 				document.body.appendChild(progressBar);
 				progressBar2=document.createElement("progress");
 				progressBar2.style.top="45px";
 				progressBar2.value=1;
+				progressBar2.className="progressBar";
 				document.body.appendChild(progressBar2);
-				mainSecondaryThree=vidget.run(0,null,null,null,{type:"notificationBoard"});	
-				SecondaryOffThread=vidget.run(1,null,null,null,{appendTo:document.createDocumentFragment()});
+				fieldset=document.createElement("fieldset");
+				fieldset.setAttribute("style","position:fixed;top:90px;pointer-events:none;border:0px solid black;height:400px;");
+				fieldset.style.top="90px";
+				document.body.appendChild(fieldset);
+				mainSecondaryThree=vidget.run(0,0,null,null,{type:"notificationBoard"});	
+				SecondaryOffThread[0]=vidget.run(1,1,null,null,{type:"fieldset"});
+				for(var i=2;i<=16;i++){
+					SecondaryOffThread[i-1]=vidget.run(1,i,null,null,{type:"fieldset"});
+				}
+				console.log("done");
 				
 		if(usernamePasswordContainer.isDefaulted || usernameLoginContainer.isDefaulted){
 			this.error.textContent="Please fill out your username and password";
@@ -570,10 +581,9 @@ newScripter("three.min.js",true).onload=function(){
 				loadingimgCtx.fillText("threeMC.js + (Three.min.js [r69])",27,28);
 			}
 		};
-	};
-	
-	
+	};	
 };
+
 }
 
 function newScripter(url,cachable){

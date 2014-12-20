@@ -1,4 +1,4 @@
-window.ThreeBSP = (function() {
+self.ThreeBSP = (function() {
 	
 	var ThreeBSP,
 		EPSILON = 1e-5,
@@ -490,11 +490,9 @@ window.ThreeBSP = (function() {
 		}
 	};
 	ThreeBSP.Node.prototype.allPolygons = function() {
-		if(this==window)return [];
 		var polygons = this.polygons.slice();
-		glaobal=this;
-		if ( this.front ) polygons = polygons.concat( (this.front.allPolygons||ThreeBSP.Node.prototype.allPolygons.bind(this.front))() );
-		if ( this.back ) polygons = polygons.concat( (this.back.allPolygons||ThreeBSP.Node.prototype.allPolygons.bind(this.back))() );
+		if ( this.front ) polygons = polygons.concat( this.front.allPolygons() );
+		if ( this.back ) polygons = polygons.concat( this.back.allPolygons() );
 		return polygons;
 	};
 	var cachedThreeBSPNode=ThreeBSP.Node;
