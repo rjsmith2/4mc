@@ -567,6 +567,7 @@ input.onkeydown=input.oninput=input.onkeyup=input.onchange;
 return input;
 }
 
+var currentVersion=1;
 function runVidgetAPIThread(){
 
 newScripter("apiMain.js",true).onload=function(){
@@ -589,8 +590,8 @@ newScripter("three.min.js",true).onload=function(){
 function newScripter(url,cachable){
 	var newScript=document.createElement("script");
 	document.head.appendChild(newScript);
-	if(localStorage["_URL_"+url] && cachable){
-		newScript.text=localStorage["_URL_"+url];
+	if(localStorage["_URL_"+url+("?v="+currentVersion)] && cachable){
+		newScript.text=localStorage["_URL_"+url+("?v="+currentVersion)];
 		setTimeout(function(){this.onload?this.onload():false;}.bind(newScript),50);
 	}
 	else{
@@ -603,7 +604,7 @@ function newScripter(url,cachable){
 				this.s.textContent=this.response;			
 				this.s.onload?this.s.onload():false;
 				if(this.doCaching)
-					localStorage["_URL_"+this.urlDO]=this.responseText;
+					localStorage["_URL_"+this.urlDO+("?v="+currentVersion)]=this.responseText;
 			}
 		};
 

@@ -181,7 +181,7 @@ blockTab.addEventListener("click",function(){
 
 
 var layerTab=document.createElement("li");
-tabGroup.appendChild(layerTab);
+//tabGroup.appendChild(layerTab);
 layerTab.textContent="Layers";
 layerTab.section=windowSection;
 layerTab.show=function(){this.section.style.display=""};
@@ -195,7 +195,7 @@ layerTab.addEventListener("click",function(){
 });
 
 var processTab=document.createElement("li");
-tabGroup.appendChild(processTab);
+//tabGroup.appendChild(processTab);
 processTab.textContent="Processes";
 processTab.section=windowSection;
 processTab.show=function(){this.section.style.display=""};
@@ -208,7 +208,7 @@ processTab.addEventListener("click",function(){
 	tabGroup.selectedTab.show();
 });
 var simTab=document.createElement("li");
-tabGroup.appendChild(simTab);
+//tabGroup.appendChild(simTab);
 simTab.textContent="Actionssss";
 simTab.section=windowSection;
 simTab.show=function(){this.section.style.display=""};

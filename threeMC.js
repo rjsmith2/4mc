@@ -266,10 +266,11 @@ function applyVertexColors( g, c ){
 				threebsp.tree.allPolygons=ThreeBSP.Node.prototype.allPolygons.bind(threebsp.tree);
 				threebsp.toGeometry=ThreeBSP.prototype.toGeometry.bind(threebsp);				
 				scene.remove( blockMeshSystem[i][1] );
-				blockMeshSystem[i][1] =ThreeBSP.prototype.toMesh.apply(threebsp,new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:colorArray[i]}))
+				blockMeshSystem[i][1] =ThreeBSP.prototype.toMesh.apply(threebsp,[new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:colorArray[i]})])
 				//blockMeshSystem[i][1] = threebsp.toMesh(new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorArray[i]}) );
 				blockMeshSystem[i][1].geometry.computeVertexNormals();				
 				scene.add(blockMeshSystem[i][1]);	
+				render();
 			}
 			function uS(i){
 				//drawnObject = new THREE.Mesh( geometry, defaultMaterial );
@@ -296,6 +297,7 @@ function applyVertexColors( g, c ){
 			}
 			init();
 			blockMeshSystem=[];
+			
 			var cube_geometryMesh = new THREE.BoxGeometry( 0.1, 0.1, 2 );
 			function newMeshSystem(i,colorHex){//for each unique type of block
 				//var start_time = (new Date()).getTime();				

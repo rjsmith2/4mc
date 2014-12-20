@@ -702,7 +702,7 @@ threads.createNewThread=function() {
 			send2VidgetGETTER(["loadSchema",data[2]]);
 		break;
 		case 10152://nonstandard API code, from secondary off-UI thread to primary off-UI thread. 
-			uSP(data[2][0],data[2][1]);
+			uSP(data[2][0],data[2][1],data[2][2]);
 		break;
 		
                
@@ -745,27 +745,35 @@ vidget.run=function(appID,threadHandlerID/*optional*/,stringScript/*optional*/,v
 	app.pID=appID+"|"+(Math.random()*(Date.now()));
     this.vidgetRunning[app.pID]=app;
 	var xhr = new XMLHttpRequest();
-	xhr.app=app;
-	xhr.onreadystatechange = function () {
-		if (this[0].readyState == 4) {
-		    if(!this[1].styleDocument)
-			  /*  socket.sendListen({command:"readFile",data:JSON.stringify({"filePath": "main/vidget/"+this[1].appID+"/default.css"})},
-			        function(json){
-			            if(!json.data&&!json.data.message)return;
-			           var sheet = document.createElement('style'); 
-                        sheet.type="text/css"; 
-			            this.styleDocument=sheet;
-			            sheet.innerHTML=vidgetifyCSS("s"+this.pID.toString().replace(/[^a-zA-Z0-9_]/gi,""),String.fromCharCode.apply(String, json.data.message).replace(/\0/g,''));
-                        document.body.appendChild(sheet);
-			        }.bind(this[1]));
-				*/
-			 this[1].thread.postMessage([0,[this[0].responseText.toString(),this[1].pID]]);
-			
-		}
-	}.bind([xhr,app]);
+	
+	xhr.url="_URL_"+"main/vidget/"+appID+"/index.js"+("?v="+currentVersion);
+	if(localStorage[xhr.url]){
+		app.thread.postMessage([0,[localStorage[xhr.url],app.pID]]);
+	}else{
+		xhr.app=app;
+		xhr.onreadystatechange = function () {
+			if (this[0].readyState == 4) {
+				if(!this[1].styleDocument)
+				  /*  socket.sendListen({command:"readFile",data:JSON.stringify({"filePath": "main/vidget/"+this[1].appID+"/default.css"})},
+						function(json){
+							if(!json.data&&!json.data.message)return;
+						   var sheet = document.createElement('style'); 
+							sheet.type="text/css"; 
+							this.styleDocument=sheet;
+							sheet.innerHTML=vidgetifyCSS("s"+this.pID.toString().replace(/[^a-zA-Z0-9_]/gi,""),String.fromCharCode.apply(String, json.data.message).replace(/\0/g,''));
+							document.body.appendChild(sheet);
+						}.bind(this[1]));
+					*/
+				localStorage[this[0].url]=this[0].responseText.toString();
+				 this[1].thread.postMessage([0,[this[0].responseText.toString(),this[1].pID]]);
+				
+			}
+		}.bind([xhr,app]);
 
-	xhr.open("GET", "main/vidget/"+appID+"/index.js", true);
-	xhr.send(null);
+		xhr.open("GET", "main/vidget/"+appID+"/index.js", true);
+		xhr.send(null);
+	}
+	
 	
     app.mainThread=threads.threadHandlers[threadHandlerID%16];
     app.mainThread.postMessage([1,appID,stringScript]);
