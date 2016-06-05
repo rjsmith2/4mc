@@ -231,19 +231,7 @@ startup.activate=function(){
 	imgLogin.error=loginError;
 	imgLogin.pass=usernamePasswordContainer;
 	imgLogin.user=usernameLoginContainer;
-	imgLogin.onclick=function(){
-		register.style.display="none";
-		registerLink.onclick();
-		//imgLogin.pass.value=JSON.parse(json["message"])["key"];
-		setTimeout(function(){
-			login.parentNode.removeChild(login);
-			register.parentNode.removeChild(register);
-			//jsonGetNewNotificationRequest();
-			delete login;
-			delete register;
-			infoPanelThingy.style.display="";
-		},200);
-				progressBar=document.createElement("progress");
+	progressBar=document.createElement("progress");
 				progressBar.value=1;
 				progressBar.className="progressBar";
 				document.body.appendChild(progressBar);
@@ -256,12 +244,28 @@ startup.activate=function(){
 				fieldset.setAttribute("style","position:fixed;top:90px;pointer-events:none;border:0px solid black;height:400px;");
 				fieldset.style.top="90px";
 				document.body.appendChild(fieldset);
-				mainSecondaryThree=vidget.run(0,0,null,null,{type:"notificationBoard"});	
-				SecondaryOffThread[0]=vidget.run(1,1,null,null,{type:"fieldset"});
-				for(var i=2;i<=16;i++){
-					SecondaryOffThread[i-1]=vidget.run(1,i,null,null,{type:"fieldset"});
+	mainSecondaryThree=vidget.run(0,0,null,null,{type:"notificationBoard"});	
+	SecondaryOffThread[0]=vidget.run(1,1,null,null,{type:"fieldset"});
+	for(var i=2;i<=13;i++){
+		SecondaryOffThread[i-1]=vidget.run(1,i,null,null,{type:"fieldset"});
+	}
+	imgLogin.onclick=function(){
+		register.style.display="none";
+		registerLink.onclick();
+		//imgLogin.pass.value=JSON.parse(json["message"])["key"];
+		setTimeout(function(){
+			login.parentNode.removeChild(login);
+			register.parentNode.removeChild(register);
+			//jsonGetNewNotificationRequest();
+			delete login;
+			delete register;
+			infoPanelThingy.style.display="";
+		},200);
+				
+				
+				for(var i=SecondaryOffThread.length;--i>=0;){
+					SecondaryOffThread[i].thread.postMessage([1599,SecondaryOffThread[i].pID,0,["initializework",SecondaryOffThread.length-1,i-1]]);
 				}
-				console.log("done");
 				
 		if(usernamePasswordContainer.isDefaulted || usernameLoginContainer.isDefaulted){
 			this.error.textContent="Please fill out your username and password";

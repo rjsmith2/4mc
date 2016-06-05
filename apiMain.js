@@ -695,16 +695,20 @@ threads.createNewThread=function() {
             
             applicationds.run(3, null, dataFromApp[1][0]);
         break;
-		case 1084://nonstandard API code
+		case 1084://nonstandard API code from primary off-ui thread to main thread
 			return Function(data[2])();
         break;
 		case 10252://nonstandard API code, from secondary off-UI thread to primary off-UI thread
-			send2VidgetGETTER(["loadSchema",data[2]]);
+			send2VidgetGETTER( ['loadSchema',data[2] ]);
+			setTimeout(function(){sendToAll( ['loadSchema',data[2] ]);},100);//send2VidgetGETTER(["loadSchema",data[2]]);
 		break;
+
 		case 10152://nonstandard API code, from secondary off-UI thread to primary off-UI thread. 
-			uSP(data[2][0],data[2][1],data[2][2]);
+			uSP(data[2][0],data[2][1],data[2][2],data[2][3]);
 		break;
-		
+		case 10253://new mesh
+			setTimeout(function(){sendToAll( ['newMeshSystem',data[2] ]);},100);//send2VidgetGETTER(["loadSchema",data[2]]);
+		break;
                
         //case :
         //    
@@ -745,7 +749,7 @@ vidget.run=function(appID,threadHandlerID/*optional*/,stringScript/*optional*/,v
 	app.pID=appID+"|"+(Math.random()*(Date.now()));
     this.vidgetRunning[app.pID]=app;
 	var xhr = new XMLHttpRequest();
-	
+	//we still have to do importScript caching.
 	xhr.url="_URL_"+"main/vidget/"+appID+"/index.js"+("?v="+currentVersion);
 	if(localStorage[xhr.url]){
 		app.thread.postMessage([0,[localStorage[xhr.url],app.pID]]);

@@ -1,0 +1,12 @@
+while true  do
+sleep(0.5)
+for i=1,16 do
+if turtle.suckUp() then
+i=1;
+end
+turtle.select(i);
+if not turtle.dropDown() then
+turtle.drop();
+end
+end
+end

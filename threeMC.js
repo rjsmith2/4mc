@@ -178,7 +178,8 @@ function applyVertexColors( g, c ){
 			var curColor="";
 			var meshTest= new THREE.Mesh(geom);
 			function nBc(x,y,i){
-				return send2SecondaryBasedOnID(i,["nBC",[x,y,i]]);
+			
+				return send2SecondaryBasedOnID(i%16,["nBC",[x,y,i]]);
 				return SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["nBC",[x,y,i]]]);
 				meshTest.position.set(x,y,currentHeight);				
 				blockMeshSystem[i][0] = blockMeshSystem[i][0].union(new ThreeBSP(meshTest));//starting here
@@ -262,26 +263,41 @@ function applyVertexColors( g, c ){
 				//updateSceneMesh();
 			
 			}
-			function uSP(i,threebsp){
+			function uSP(i,threebsp,workerID,color){
+			workerID++;
+				if(!blockMeshSystem[ i +(workerID*i) ])newMeshSystem( i +(workerID*i) );
 				threebsp.tree.allPolygons=ThreeBSP.Node.prototype.allPolygons.bind(threebsp.tree);
-				threebsp.toGeometry=ThreeBSP.prototype.toGeometry.bind(threebsp);				
-				scene.remove( blockMeshSystem[i][1] );
-				blockMeshSystem[i][1] =ThreeBSP.prototype.toMesh.apply(threebsp,[new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:colorArray[i]})])
+				threebsp.toGeometry=ThreeBSP.prototype.toGeometry.bind(threebsp);		
+				
+				//scene.remove( blockMeshSystem[ i +(workerID*i) ][1] );
+				blockMeshSystem[ i +(workerID*i) ][0]=threebsp;
+				blockMeshSystem[ i +(workerID*i) ][1] =ThreeBSP.prototype.toMesh.apply(threebsp,[new THREE.MeshLambertMaterial({shading: THREE.FlatShading,color:0xff0000})])
 				//blockMeshSystem[i][1] = threebsp.toMesh(new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorArray[i]}) );
-				blockMeshSystem[i][1].geometry.computeVertexNormals();				
-				scene.add(blockMeshSystem[i][1]);	
+				blockMeshSystem[ i +(workerID*i)  ][1].geometry.computeVertexNormals();				
+				scene.add(blockMeshSystem[ i +(workerID*i) ][1]);	
 				render();
 			}
 			function uS(i){
 				//drawnObject = new THREE.Mesh( geometry, defaultMaterial );
 				//scene.add(drawnObject);
 				//geometry = new THREE.Geometry();
-				return send2SecondaryBasedOnID(i,["uS",[i]]);
+				return sendToAll( ["uS",[i]] );
+				return "";send2SecondaryBasedOnID(i,["uS",[i]]);
 				//return SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["uS",[i]]]);
 				scene.remove( blockMeshSystem[i][1] );
 				blockMeshSystem[i][1] = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorArray[i]}));
 				blockMeshSystem[i][1].geometry.computeVertexNormals();				
 				scene.add(blockMeshSystem[i][1]);	
+			}
+			function uSc(i,colorHex){
+				console.log("coloring");
+				return;
+				scene.remove( blockMeshSystem[i][1] );
+				blockMeshSystem[ i +(workerID*i) ][1] =ThreeBSP.prototype.toMesh.apply(threebsp,[new THREE.MeshLambertMaterial({shading: THREE.FlatShading})])
+				blockMeshSystem[i][1] = blockMeshSystem[i][0].toMesh( new THREE.MeshLambertMaterial({wireframe:true,shading: THREE.FlatShading,color:colorHex}));
+				blockMeshSystem[i][1].geometry.computeVertexNormals();				
+				scene.add(blockMeshSystem[i][1]);	
+				render();
 			}
 			function updateSceneMesh(){
 				renderer.isPreloaded=true;
@@ -292,6 +308,7 @@ function applyVertexColors( g, c ){
 				geometryPlane.position.copy(drawnObject.position).sub(new THREE.Vector3(1+~mapSize[0]/2,1+~mapSize[1]/2, 1));
 				render();
 				geometry = new THREE.Geometry();
+				camera.target=geometryPlane;
 				
 				
 			}
@@ -299,8 +316,9 @@ function applyVertexColors( g, c ){
 			blockMeshSystem=[];
 			
 			var cube_geometryMesh = new THREE.BoxGeometry( 0.1, 0.1, 2 );
-			function newMeshSystem(i,colorHex){//for each unique type of block
-				//var start_time = (new Date()).getTime();				
+			function newMeshSystem(i){//for each unique type of block
+				//var start_time = (new Date()).getTime();	
+				if(blockMeshSystem[i])return;
 				var material = new THREE.MeshBasicMaterial();
 				var cube_mesh = new THREE.Mesh( cube_geometryMesh,material );
 				blockMeshSystem[i] = [new ThreeBSP( cube_mesh )];
@@ -315,7 +333,7 @@ function applyVertexColors( g, c ){
 				//position4Mesh=new THREE.Vector3().copy(resultMesY.position);
 				scene.add( resultMesY );
 				//console.log( 'bench: ' + ((new Date()).getTime() - start_time) + 'ms' );
-				send2SecondaryBasedOnID(i,["newMeshSystem",[i,colorHex]]);
+				//send2SecondaryBasedOnID(i,["newMeshSystem",[i,colorHex]]);
 				//SecondaryOffThread.thread.postMessage([1599,SecondaryOffThread.pID,0,["newMeshSystem",[i,colorHex]]]);
 				return blockMeshSystem[i];
 			}

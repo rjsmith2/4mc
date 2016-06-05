@@ -56,6 +56,8 @@ blocksGroup.setAttribute("style","height:500px;overflow:auto;");
 newBlockID.addEventListener("click",function(){ 
 	var div=blockIDElement();
 	blocksGroup.appendChild(div);
+	
+	
 });
 
 
@@ -235,7 +237,7 @@ var newExecuteTask=function(str){
 	return 1;
 }
 setInterval(sendExecute,500);//send some while idling (like user switched tabs)
-var executeBulkAmount=25;
+var executeBulkAmount=55;
 var sendExecute=function(){
 	//newWindow.postMessage([1084,"25423"]);
 	
@@ -277,7 +279,7 @@ var doAscendingLayer=function(data,layerID,mapData){
 			var x=((i )%mapSizeArr[0]);
 			var y=((i-x)/mapSizeArr[0]);
 			++counterBlocks[data[i]];
-			newExecuteTask("nBc("+x+","+y+","+loadedBlock[data[i]]+");");
+			//newExecuteTask("nBc("+x+","+y+","+loadedBlock[data[i]]+");");
 			++totalnET;
 		
 	}
@@ -287,8 +289,10 @@ var doAscendingLayer=function(data,layerID,mapData){
 		for(div in blockIDElementArrayID){
 			if(counterBlocks[div])
 				blockIDElementArrayID[div].blockCounter.textContent="Count:"+counterBlocks[div];
+				//newExecuteTask("uSc("+div+",0x"+blockIDElementArrayID[div].colorChosen+");");
 		}
-		loadedBlock.forEach(function(d){newExecuteTask("uS("+d+");");});
+
+		//loadedBlock.forEach(function(d){if(!blockIDElementArrayID[d])return console.log(" rejecting "+d);newExecuteTask("uSc("+d+",0x"+blockIDElementArrayID[d].colorChosen+");");});
 		newExecuteTask("progressBar.value=progressBar2.value="+1+";render();");
 		console.log("total task workload:"+totalnET);
 		console.log("executingOrder has:"+executingOrder.length);
@@ -359,7 +363,7 @@ var newWorld=function(x,y){
 	//clear pickingData;
 	//clear scene
 	//generate layerHelper that starts at layer 0;
-	newExecuteTask("newWorld("+x+","+y+");");
+	newWindow.postMessage([1084,"newWorld("+x+","+y+");"]);
 	
 	mapZ=0;
 	mapSizeArr=[x,y];
@@ -619,6 +623,7 @@ var blockIDElement=function(i){
 	div.itemIDText=finalBlockIDOutput;
 	div.appendChild(stats);
 	if(selectedBlock==null)selectBlockID(div);
+	newWindow.postMessage([10253,[div.colorID,div.colorChosen] ]);
 	return div;
 	
 }
